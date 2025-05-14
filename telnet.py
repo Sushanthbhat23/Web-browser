@@ -25,6 +25,10 @@ class URL:
         request += "Host: {}\r\n".format(self.host)
         request += "\r\n"
         s.send(request.encode("utf8"))
+        response = s.makefile("r", encoding = "utf8", newline = "\r\n") #used to read the servers response
 
+        #splitting response into pieces
+        statusline = response.readline()
+        version, status, explanation = statusline.split(" ", 2)
     
         
