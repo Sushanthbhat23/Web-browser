@@ -27,8 +27,44 @@ class URL:
         s.send(request.encode("utf8"))
         response = s.makefile("r", encoding = "utf8", newline = "\r\n") #used to read the servers response
 
-        #splitting response into pieces
+        #splitting response into pieces and recording statusline
         statusline = response.readline()
         version, status, explanation = statusline.split(" ", 2)
+
+        #recording header
+        response_headers = {}
+        while True:
+            line = response.readline()
+            if line == '\r\n': break
+            header, value = line.split(":", 1)
+            response_headers[header.casefold()] = value.strip()
+
+            #making sure that certain headers that tell us data is sent in an unusual way is not present
+            assert "transfer-encoding" not in response_headers
+            assert "content-encoding" not in response_headers
+
+            #reading other content
+            content = response.read()
+            s.close()
+            return content #returns the content that has been read in this function
+        
+    def show(self, body):
+        in_tag = False
+        for c in body:
+            if c == "<":
+                in_tag = True
+            elif c == ">":
+                in_tag = True
+            elif not in_tag:
+                print(c, end = " ")
     
+    #loading the url
+    def load(self, url):
+        body = URL(url).request()
+        self.show(body)
+
+        if __name__ == "__main__":
+            import sys
+            self.load(URL(sys.argv[1]))
+
         
